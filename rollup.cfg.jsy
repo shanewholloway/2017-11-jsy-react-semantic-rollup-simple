@@ -1,7 +1,13 @@
+const pify = require('pify')
 const path = require('path')
+const crypto = require('crypto')
+const zlib = require('zlib')
+const fs = require('fs')
+const fs_p = pify @ require('fs')
 const { minify } = require('uglify-es')
 
 const rollup = require('rollup')
+const chokidar = require('chokidar')
 
 const rpi = @:
     babel: require @ 'rollup-plugin-babel'
@@ -10,7 +16,6 @@ const rpi = @:
   , commonjs: require @ 'rollup-plugin-commonjs'
 
   , replace: require @ 'rollup-plugin-replace'
-  , importAlias: require @ 'rollup-plugin-import-alias'
 
   , hash: require @ 'rollup-plugin-hash'
   , filesize: require @ 'rollup-plugin-filesize'
@@ -24,6 +29,7 @@ function _flatten(...args) ::
   const plugins = args
     .reduce @ (a,b) => a.concat(b), []
     .reduce @ (a,b) => a.concat(b), []
+    .filter @ e => e
   return plugins
 
 const jsy_babel_cfg = @:
@@ -36,12 +42,12 @@ const jsy_babel_cfg = @:
 
 
 export const jsyPluginsForEnv = (opt={}) => @#
-
   , rpi.resolve @: browser: true, main: true, module: true, jsnext: true,
       customResolveOptions: @:
         basedir: __dirname
 
   , rpi.commonjs @:
+        include: 'node_modules/**'
 
   , rpi.babel @:
         exclude: 'node_modules/**'
@@ -53,7 +59,8 @@ export const jsyPluginsForEnv = (opt={}) => @#
 export const depsPluginsForEnv = (opt={}) => @#
   , rpi.resolve @: browser: true, main: true, module: true, jsnext: true
   , rpi.commonjs @:
-      namedExports: @:
+        include: 'node_modules/**'
+      , namedExports: @:
           'node_modules/react/react.js': @# 'Component', 'Children', 'isValidElement', 'cloneElement', 'createElement'
         , 'node_modules/react/index.js': @# 'Component', 'Children', 'isValidElement', 'cloneElement', 'createElement'
 
@@ -71,6 +78,7 @@ export const stdPluginsForEnv = (opt={}) => @#
 
   , opt.viz && rpi.viz @: filename: `./public/${opt.source.name}${opt.suffix}.stats.html`
 
+  , swh_rollup_plugin()
   , opt.hash && rpi.hash @:
       dest: `./public/${opt.source.name}${opt.suffix}.[hash].js`
     , manifest: `./public/${opt.source.name}${opt.suffix}.manifest.json`
@@ -80,10 +88,50 @@ export const stdPluginsForEnv = (opt={}) => @#
       clearLine: opt.progress.clearLine
 
 
+function swh_rollup_plugin() ::
+  const minSize = 14e3
+  return @:
+      name: 'swh-try-plugin'
+    , async onwrite(buildOpts) ::
+        try ::
+          const file = buildOpts.file
+          const [h, compressed] = await Promise.all @#
+              hashFile(file), compressFile(file)
+
+          const fname_parts = path.parse(file)
+          fname_parts.base = null
+          fname_parts.ext = `.${h}${fname_parts.ext}`
+
+          const dest_hash = path.format(fname_parts)
+          await Promise.all @#
+              fs_p.copyFile @ file, dest_hash
+            , compressed && fs_p.copyFile @ file+'.gz', dest_hash+'.gz'
+          await fs_p.writeFile @ file+'.lnk', path.basename(dest_hash)
+        catch err ::
+          console.error @ "ERROR", err
+
+  function hashFile(file, algorithm='sha1') ::
+    return new Promise @ function(resolve, reject) ::
+      fs.createReadStream(file)
+        .pipe @ crypto.createHash(algorithm)
+        .on @ 'error', reject
+        .on @ 'data', function(h) ::
+          resolve @ h.toString('hex')
+
+  function compressFile(file) ::
+    return fs_p.stat(file).then @ stat => ::
+      if stat.size <= minSize :: return false
+      return new Promise @ function(resolve, reject) ::
+        fs.createReadStream(file)
+          .pipe @ zlib.createGzip()
+          .pipe @ fs.createWriteStream @ `${file}.gz`
+          .on @ 'error', reject
+          .on @ 'finish', function() :: resolve(true)
+    
+
 export async function bundle_vendor(source, opt={}) ::
   opt.source = path.parse @ source
   opt.suffix = opt.production ? '.min' : ''
-  console.log @ opt
 
   const globalModules = @:
 
@@ -108,7 +156,6 @@ export async function bundle_vendor(source, opt={}) ::
 export async function bundle_jsy(source, opt={}) ::
   opt.source = path.parse @ source
   opt.suffix = opt.production ? '.min' : ''
-  console.log @ opt
 
   const globalModules = @:
       'react': 'window.React'
@@ -116,7 +163,6 @@ export async function bundle_jsy(source, opt={}) ::
 
   const input = @:
       input: source
-    , name: 'awesome'
     , plugins: _flatten @
         jsyPluginsForEnv(opt)
       , stdPluginsForEnv(opt)
@@ -135,35 +181,73 @@ export async function bundle_jsy(source, opt={}) ::
   return @: input, output, opt
 
 
-const production = true
+const production = false
 export const opt_common = @:
     production
   , sourcemap: !production
-  , progress: @: clearLine: false
-  , filesize: true
-  , viz: true
-  , hash: production
-  , gzip: production
-
-export const bundleList = @[]
-  , bundle_vendor @ './app/vendor.js', opt_common
-  , bundle_jsy @ './app/main.jsy', opt_common
+  , progress: true
+  //, filesize: ! true
+  , viz: ! true
+  //, hash: production
+  //, gzip: production
 
 
-async function buildOne(bundle_options) ::
+async function buildBundle(bundle_options) ::
   if ! bundle_options :: return
-  const {input, output} = await bundle_options
+  let {input, output} = await bundle_options
+  input = Object.assign @ {}, input
+  output = Object.assign @ {}, output
 
-  const bundle = await rollup.rollup(input)
+  let bundle = await rollup.rollup(input)
   await bundle.write(output)
 
+  return async function () ::
+    input.cache = bundle
+    bundle = await rollup.rollup(input)
+    await bundle.write(output)
+    return bundle
 
-async function main() ::
-  try ::
-    for const ea of bundleList ::
-      await buildOne(ea)
-  catch err ::
-    console.error @ err
+async function main(withWatcher) ::
+  //await buildBundle @ bundle_vendor @ './app/vendor.js', opt_common
+  const rebuilders = @#
+      await buildBundle @ bundle_jsy @ './app/main.jsy', opt_common
+    , await buildBundle @ bundle_jsy @ './app/simple.jsy', opt_common
+
+  if ! withWatcher :: return
+
+  let inprogress_changes = null
+  async function rebuild_for_change(path) ::
+    if null !== inprogress_changes ::
+      return inprogress_changes.push(path)
+
+    inprogress_changes = [path]
+    await new Promise @ resolve => setTimeout(resolve, 50)
+    console.time('rebuild for changes')
+    try ::
+      await Promise.all @
+        rebuilders.map @ fn => fn && fn()
+      console.timeEnd('rebuild for changes')
+    catch err ::
+      console.error @ err
+    finally ::
+      inprogress_changes = null
+
+  ::
+    const w_app = chokidar
+      .watch @ './app',
+        @: ignoreInitial: true, ignorePermissionErrors: true
+      .on @ 'change', rebuild_for_change
+
+    const w_setup = chokidar
+      .watch @ ['./package.json', __filename, './rollup.cfg.jsy'],
+        @: ignoreInitial: true
+      .on @ 'ready', function () ::
+          console.log @ `Watching for changes`, __filename
+      .on @ 'change', function (path) ::
+          console.log @ `Setup changed; shutting down watchers ("${path}")`
+          w_app.close()
+          w_setup.close()
+
 
 if module === require.main ::
-  main()
+  main @ process.argv.includes @ '--watch'
