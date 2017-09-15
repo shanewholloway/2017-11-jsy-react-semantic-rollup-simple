@@ -17,9 +17,6 @@ const rpi = @:
 
   , replace: require @ 'rollup-plugin-replace'
 
-  , hash: require @ 'rollup-plugin-hash'
-  , filesize: require @ 'rollup-plugin-filesize'
-  , gzip: require @ 'rollup-plugin-gzip'
   , viz: require @ 'rollup-plugin-visualizer'
   , uglify: require @ 'rollup-plugin-uglify'
   , progress: require @ 'rollup-plugin-progress'
@@ -78,17 +75,12 @@ export const stdPluginsForEnv = (opt={}) => @#
 
   , opt.viz && rpi.viz @: filename: `./public/${opt.source.name}${opt.suffix}.stats.html`
 
-  , swh_rollup_plugin()
-  , opt.hash && rpi.hash @:
-      dest: `./public/${opt.source.name}${opt.suffix}.[hash].js`
-    , manifest: `./public/${opt.source.name}${opt.suffix}.manifest.json`
-  , opt.gzip && rpi.gzip()
-  , opt.filesize && rpi.filesize()
+  , hash_and_gzip_local_rollup_plugin()
   , opt.progress && rpi.progress @:
       clearLine: opt.progress.clearLine
 
 
-function swh_rollup_plugin() ::
+function hash_and_gzip_local_rollup_plugin() ::
   const minSize = 14e3
   return @:
       name: 'swh-try-plugin'
