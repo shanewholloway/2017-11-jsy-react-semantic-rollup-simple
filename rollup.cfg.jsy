@@ -1,0 +1,169 @@
+const path = require('path')
+const { minify } = require('uglify-es')
+
+const rollup = require('rollup')
+
+const rpi = @:
+    babel: require @ 'rollup-plugin-babel'
+
+  , resolve: require @ 'rollup-plugin-node-resolve'
+  , commonjs: require @ 'rollup-plugin-commonjs'
+
+  , replace: require @ 'rollup-plugin-replace'
+  , importAlias: require @ 'rollup-plugin-import-alias'
+
+  , hash: require @ 'rollup-plugin-hash'
+  , filesize: require @ 'rollup-plugin-filesize'
+  , gzip: require @ 'rollup-plugin-gzip'
+  , viz: require @ 'rollup-plugin-visualizer'
+  , uglify: require @ 'rollup-plugin-uglify'
+  , progress: require @ 'rollup-plugin-progress'
+
+
+function _flatten(...args) ::
+  const plugins = args
+    .reduce @ (a,b) => a.concat(b), []
+    .reduce @ (a,b) => a.concat(b), []
+  return plugins
+
+const jsy_babel_cfg = @:
+    presets: @#
+        @# 'jsy', @: no_stage_3: true, modules: false
+      , @# 'react'
+
+  , plugins: @#
+        'external-helpers'
+
+
+export const jsyPluginsForEnv = (opt={}) => @#
+
+  , rpi.resolve @: browser: true, main: true, module: true, jsnext: true,
+      customResolveOptions: @:
+        basedir: __dirname
+
+  , rpi.commonjs @:
+
+  , rpi.babel @:
+        exclude: 'node_modules/**'
+      , babelrc: false, highlightCode: false
+      , presets: jsy_babel_cfg.presets
+      , plugins: jsy_babel_cfg.plugins
+
+
+export const depsPluginsForEnv = (opt={}) => @#
+  , rpi.resolve @: browser: true, main: true, module: true, jsnext: true
+  , rpi.commonjs @:
+      namedExports: @:
+          'node_modules/react/react.js': @# 'Component', 'Children', 'isValidElement', 'cloneElement', 'createElement'
+        , 'node_modules/react/index.js': @# 'Component', 'Children', 'isValidElement', 'cloneElement', 'createElement'
+
+
+export const stdPluginsForEnv = (opt={}) => @#
+  , rpi.replace @:
+        'process.env.NODE_ENV': JSON.stringify @
+          opt.production ? 'production' : 'development'
+
+  , opt.production && rpi.uglify @
+      @: compress: { warnings: false }
+       , output: { comments: false }
+       , sourceMap: false
+    , minify
+
+  , opt.viz && rpi.viz @: filename: `./public/${opt.source.name}${opt.suffix}.stats.html`
+
+  , opt.hash && rpi.hash @:
+      dest: `./public/${opt.source.name}${opt.suffix}.[hash].js`
+    , manifest: `./public/${opt.source.name}${opt.suffix}.manifest.json`
+  , opt.gzip && rpi.gzip()
+  , opt.filesize && rpi.filesize()
+  , opt.progress && rpi.progress @:
+      clearLine: opt.progress.clearLine
+
+
+export async function bundle_vendor(source, opt={}) ::
+  opt.source = path.parse @ source
+  opt.suffix = opt.production ? '.min' : ''
+  console.log @ opt
+
+  const globalModules = @:
+
+  const input = @:
+      input: source
+    , plugins: _flatten @ 
+        depsPluginsForEnv(opt)
+      , stdPluginsForEnv(opt)
+    , external(module) ::
+        return !! globalModules[module]
+
+  const output = @:
+      format: 'iife'
+    , name: opt.source.name
+    , file: `./public/${opt.source.name}${opt.suffix}.js`
+    , sourcemap: opt.sourcemap
+    , globals(module) ::
+        return globalModules[module]
+
+  return @: input, output, opt
+
+export async function bundle_jsy(source, opt={}) ::
+  opt.source = path.parse @ source
+  opt.suffix = opt.production ? '.min' : ''
+  console.log @ opt
+
+  const globalModules = @:
+      'react': 'window.React'
+    , 'react-dom': 'window.ReactDOM'
+
+  const input = @:
+      input: source
+    , name: 'awesome'
+    , plugins: _flatten @
+        jsyPluginsForEnv(opt)
+      , stdPluginsForEnv(opt)
+
+    , external(module) ::
+        return !! globalModules[module]
+
+  const output = @:
+      format: 'iife'
+    , name: opt.source.name
+    , file: `./public/${opt.source.name}${opt.suffix}.js`
+    , sourcemap: opt.sourcemap
+    , globals(module) ::
+        return globalModules[module]
+
+  return @: input, output, opt
+
+
+const production = true
+export const opt_common = @:
+    production
+  , sourcemap: !production
+  , progress: @: clearLine: false
+  , filesize: true
+  , viz: true
+  , hash: production
+  , gzip: production
+
+export const bundleList = @[]
+  , bundle_vendor @ './app/vendor.js', opt_common
+  , bundle_jsy @ './app/main.jsy', opt_common
+
+
+async function buildOne(bundle_options) ::
+  if ! bundle_options :: return
+  const {input, output} = await bundle_options
+
+  const bundle = await rollup.rollup(input)
+  await bundle.write(output)
+
+
+async function main() ::
+  try ::
+    for const ea of bundleList ::
+      await buildOne(ea)
+  catch err ::
+    console.error @ err
+
+if module === require.main ::
+  main()
