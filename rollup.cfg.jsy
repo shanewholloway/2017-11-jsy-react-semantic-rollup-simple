@@ -173,15 +173,14 @@ export async function bundle_jsy(source, opt={}) ::
   return @: input, output, opt
 
 
-const production = false
-export const opt_common = @:
-    production
-  , sourcemap: !production
+export const opt_production = @:
+    production: true, sourcemap: false
+  , progress: @: clearLine: false
+  , viz: true
+export const opt_development = @:
+    production: false, sourcemap: true
   , progress: true
-  //, filesize: ! true
-  , viz: ! true
-  //, hash: production
-  //, gzip: production
+  , viz: true
 
 
 async function buildBundle(bundle_options) ::
@@ -200,10 +199,15 @@ async function buildBundle(bundle_options) ::
     return bundle
 
 async function main(withWatcher) ::
-  //await buildBundle @ bundle_vendor @ './app/vendor.js', opt_common
+  await buildBundle @ bundle_vendor @ './app/vendor.js', opt_development
+  await buildBundle @ bundle_vendor @ './app/vendor.js', opt_production
+
   const rebuilders = @#
-      await buildBundle @ bundle_jsy @ './app/main.jsy', opt_common
-    , await buildBundle @ bundle_jsy @ './app/simple.jsy', opt_common
+    , await buildBundle @ bundle_jsy @ './app/main.jsy', opt_development
+    , await buildBundle @ bundle_jsy @ './app/main.jsy', opt_production
+
+    , await buildBundle @ bundle_jsy @ './app/simple.jsy', opt_development
+    , await buildBundle @ bundle_jsy @ './app/simple.jsy', opt_production
 
   if ! withWatcher :: return
 
