@@ -39,3 +39,8 @@ $ wc -c public/*.min.js.gz public/css/*.min.css.gz
    59953 public/css/semantic.min.css.gz
    99148 total
 ```
+
+## License
+
+[BSD-2-Clause](LICENSE)
+
