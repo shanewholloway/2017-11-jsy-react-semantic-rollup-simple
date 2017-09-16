@@ -14,10 +14,18 @@ async function main() ::
   server.on @ 'request', api
 
   server.listen @ 3000, function() ::
+    const {port} = this.address()
+    const url = `https://127.0.0.1:${port}`
+
     console.log @
     console.log @ `READY!`
-    console.log @ `  production: https://127.0.0.1:${this.address().port}/index.html`
-    console.log @ `  development: https://127.0.0.1:${this.address().port}/index.dev.html`
+    console.log @ `  production: ${url}/index.html`
+    console.log @ `  development: ${url}/index.dev.html`
+    console.log @
+    console.log @ `  stats:`
+    console.log @ `   - ${url}/vendor.stats.html`
+    console.log @ `   - ${url}/main.stats.html`
+    console.log @ `   - ${url}/simple.stats.html`
     console.log @
 
 
