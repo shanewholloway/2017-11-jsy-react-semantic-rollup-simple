@@ -31,7 +31,8 @@ Then open in browser.
 
 Take a look at the network inspector under your browser's devtools. Also take a look at the resulting file sizes: 
 
-`$ wc -c public/*.min.js.gz public/css/*.min.css.gz
+```bash
+$ wc -c public/*.min.js.gz public/css/*.min.css.gz
 
    31983 public/main.min.js.gz
     7212 public/vendor.min.js.gz
