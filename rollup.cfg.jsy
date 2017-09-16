@@ -15,6 +15,7 @@ const rpi = @:
   , resolve: require @ 'rollup-plugin-node-resolve'
   , commonjs: require @ 'rollup-plugin-commonjs'
 
+  , virtual_alias: require @ 'rollup-plugin-virtual-alias'
   , replace: require @ 'rollup-plugin-replace'
 
   , viz: require @ 'rollup-plugin-visualizer'
@@ -39,7 +40,7 @@ const jsy_babel_cfg = @:
 
 
 export const jsyPluginsForEnv = (opt={}) => @#
-  , rpi.resolve @: browser: true, main: true, module: true, jsnext: true,
+    rpi.resolve @: browser: true, main: true, module: true, jsnext: true,
       customResolveOptions: @:
         basedir: __dirname
 
@@ -54,7 +55,7 @@ export const jsyPluginsForEnv = (opt={}) => @#
 
 
 export const depsPluginsForEnv = (opt={}) => @#
-  , rpi.resolve @: browser: true, main: true, module: true, jsnext: true
+    rpi.resolve @: browser: true, main: true, module: true, jsnext: true
   , rpi.commonjs @:
         include: 'node_modules/**'
       , namedExports: @:
@@ -62,18 +63,23 @@ export const depsPluginsForEnv = (opt={}) => @#
         , 'node_modules/react/index.js': @# 'Component', 'Children', 'isValidElement', 'cloneElement', 'createElement'
 
 
-export const stdPluginsForEnv = (opt={}) => @#
+export const stdPrePluginsForEnv = (opt={}) => @#
+    rpi.virtual_alias @:
+      'react': 'preact-compat',
+      'react-dom': 'preact-compat',
+
   , rpi.replace @:
-        'process.env.NODE_ENV': JSON.stringify @
-          opt.production ? 'production' : 'development'
+      'process.env.NODE_ENV': JSON.stringify @
+        opt.production ? 'production' : 'development'
+
+export const stdPostPluginsForEnv = (opt={}) => @#
+    opt.viz && rpi.viz @: filename: `./public/${opt.source.name}${opt.suffix}.stats.html`
 
   , opt.production && rpi.uglify @
       @: compress: { warnings: false }
        , output: { comments: false }
        , sourceMap: false
     , minify
-
-  , opt.viz && rpi.viz @: filename: `./public/${opt.source.name}${opt.suffix}.stats.html`
 
   , hash_and_gzip_local_rollup_plugin()
   , opt.progress && rpi.progress @:
@@ -83,7 +89,7 @@ export const stdPluginsForEnv = (opt={}) => @#
 function hash_and_gzip_local_rollup_plugin() ::
   const minSize = 14e3
   return @:
-      name: 'swh-try-plugin'
+      name: 'hash-gzip-local-plugin'
     , async onwrite(buildOpts) ::
         try ::
           const file = buildOpts.file
@@ -130,8 +136,9 @@ export async function bundle_vendor(source, opt={}) ::
   const input = @:
       input: source
     , plugins: _flatten @ 
-        depsPluginsForEnv(opt)
-      , stdPluginsForEnv(opt)
+        stdPrePluginsForEnv(opt)
+      , depsPluginsForEnv(opt)
+      , stdPostPluginsForEnv(opt)
     , external(module) ::
         return !! globalModules[module]
 
@@ -156,8 +163,9 @@ export async function bundle_jsy(source, opt={}) ::
   const input = @:
       input: source
     , plugins: _flatten @
-        jsyPluginsForEnv(opt)
-      , stdPluginsForEnv(opt)
+        stdPrePluginsForEnv(opt)
+      , jsyPluginsForEnv(opt)
+      , stdPostPluginsForEnv(opt)
 
     , external(module) ::
         return !! globalModules[module]
@@ -246,4 +254,6 @@ async function main(withWatcher) ::
 
 
 if module === require.main ::
-  main @ process.argv.includes @ '--watch'
+  main @
+    process.argv.includes @ '--watch'
+  .catch @ console.error
