@@ -1,8 +1,9 @@
 {
   "private": true,
-  "name": "2017-09-14-rollup-semantic-react",
+  "name": "2017-09-14-jsy-react-semantic-rollup",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
   "license": "BSD-2-Clause",
+  "homepage": "https://github.com/shanewholloway/2017-09-14-jsy-react-semantic-rollup",
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
