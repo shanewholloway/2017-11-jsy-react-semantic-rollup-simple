@@ -208,14 +208,14 @@ async function buildBundle(bundle_options) ::
 
 async function main(withWatcher) ::
   await buildBundle @ bundle_vendor @ './app/vendor.js', opt_development
-  await buildBundle @ bundle_vendor @ './app/vendor.js', opt_production
+  //await buildBundle @ bundle_vendor @ './app/vendor.js', opt_production
 
   const rebuilders = @#
     , await buildBundle @ bundle_jsy @ './app/main.jsy', opt_development
-    , await buildBundle @ bundle_jsy @ './app/main.jsy', opt_production
+    //, await buildBundle @ bundle_jsy @ './app/main.jsy', opt_production
 
     , await buildBundle @ bundle_jsy @ './app/simple.jsy', opt_development
-    , await buildBundle @ bundle_jsy @ './app/simple.jsy', opt_production
+    //, await buildBundle @ bundle_jsy @ './app/simple.jsy', opt_production
 
   if ! withWatcher :: return
 

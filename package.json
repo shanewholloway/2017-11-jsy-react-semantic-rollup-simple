@@ -47,7 +47,7 @@
     "start:static": "http-server -c-1 ./public",
     "build": "run-p build:*",
     "build:css": "mkdir -p ./public/css ; cp -R ./node_modules/semantic-ui-css-latolatin/dist/* ./public/css/",
-    "build:server": "babel -s inline -x .js,.jsy code -d dist",
+    "build:server": "babel -s inline -x .js,.jsy code -Dd dist",
     "build:app": "babel-node ./rollup.cfg.jsy",
     "watch": "run-p watch:*",
     "watch:server": "npm -s run build:server -- --watch",

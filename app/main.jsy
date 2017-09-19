@@ -1,3 +1,15 @@
+console.log @ 'top of main', new Date()
+import {connectReloadEventSource, reloadDataLiveElements} from './live-loader.jsy'
+
+
+if 'production' !== process.env.NODE_ENV ::
+  const uid = Date.now().toString(36)
+  window.es = connectReloadEventSource @ '__live__', live_changes => ::
+    window.live_changes = live_changes
+    console.log @ 'does this still work?', uid
+
+    reloadDataLiveElements(live_changes, document)
+
 import React from 'react'
 import ReactDOM from 'react-dom'
 import Progress from 'semantic-ui-react/dist/es/modules/Progress'
@@ -15,3 +27,5 @@ function DummyComponent() ::
 ::
   const root = document.querySelector('main')
   ReactDOM.render(<DummyComponent />, root)
+
+console.log @ 'bottom of main', new Date()
