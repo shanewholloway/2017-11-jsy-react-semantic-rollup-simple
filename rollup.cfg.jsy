@@ -73,7 +73,7 @@ export const stdPrePluginsForEnv = (opt={}) => @#
         opt.production ? 'production' : 'development'
 
 export const stdPostPluginsForEnv = (opt={}) => @#
-    opt.viz && rpi.viz @: filename: `./public/${opt.source.name}${opt.suffix}.stats.html`
+    opt.viz && rpi.viz @: filename: `./dist/public/${opt.source.name}${opt.suffix}.stats.html`
 
   , opt.production && rpi.uglify @
       @: compress: { warnings: false }
@@ -145,7 +145,7 @@ export async function bundle_vendor(source, opt={}) ::
   const output = @:
       format: 'iife'
     , name: opt.source.name
-    , file: `./public/${opt.source.name}${opt.suffix}.js`
+    , file: `./dist/public/${opt.source.name}${opt.suffix}.js`
     , sourcemap: opt.sourcemap
     , globals(module) ::
         return globalModules[module]
@@ -173,7 +173,7 @@ export async function bundle_jsy(source, opt={}) ::
   const output = @:
       format: 'iife'
     , name: opt.source.name
-    , file: `./public/${opt.source.name}${opt.suffix}.js`
+    , file: `./dist/public/${opt.source.name}${opt.suffix}.js`
     , sourcemap: opt.sourcemap
     , globals(module) ::
         return globalModules[module]

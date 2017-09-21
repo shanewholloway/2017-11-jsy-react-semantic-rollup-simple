@@ -19,8 +19,7 @@ async function main() ::
 
     console.log @
     console.log @ `READY!`
-    console.log @ `  production: ${url}/index.html`
-    console.log @ `  development: ${url}/index.dev.html`
+    console.log @ `  ${url}`
     console.log @
     console.log @ `  stats:`
     console.log @ `   - ${url}/vendor.stats.html`

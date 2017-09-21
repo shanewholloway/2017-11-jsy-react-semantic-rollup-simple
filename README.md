@@ -32,11 +32,11 @@ Then open in browser.
 Take a look at the network inspector under your browser's devtools. Also take a look at the resulting file sizes: 
 
 ```bash
-$ wc -c public/*.min.js.gz public/css/*.min.css.gz
+$ wc -c ./dist/public/*.min.js.gz ./dist/public/css/*.min.css.gz
 
-   31983 public/main.min.js.gz
-    7212 public/vendor.min.js.gz
-   59953 public/css/semantic.min.css.gz
+   31983 ./dist/public/main.min.js.gz
+    7212 ./dist/public/vendor.min.js.gz
+   59953 ./dist/public/css/semantic.min.css.gz
    99148 total
 ```
 

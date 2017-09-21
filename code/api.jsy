@@ -37,7 +37,7 @@ api.get @ `/__live__`, (req, res) => ::
 api.get @ '/', (req, res) => res.render('index')
 api.get @ '/index.html', (req, res) => res.render('index')
 
-const webroot = path.join @ __dirname, '../public'
+const webroot = path.join @ __dirname, 'public'
 api.use @ '/', expressStaticGzip(webroot)
 
 const live_subscriptions = new Set()

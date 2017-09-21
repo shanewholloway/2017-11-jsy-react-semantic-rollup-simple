@@ -35,7 +35,7 @@
     "rollup-plugin-uglify": "^2.0.1",
     "rollup-plugin-virtual-alias": "^1.0.1",
     "rollup-plugin-visualizer": "^0.3.1",
-    "semantic-ui-css-latolatin": "^2.2.13",
+    "semantic-ui-css-latolatin": "2.2.13-f2",
     "semantic-ui-react": "^0.73.0",
     "uglify-es": "^3.1.0"
   },
@@ -43,12 +43,15 @@
     "presets": "jsy/lean"
   },
   "scripts": {
+    ":init_mk_dist": "mkdir -p ./dist/public/css",
+    "prestart": "npm run -s build",
     "start": "node ./dist/server.js",
-    "start:static": "http-server -c-1 ./public",
+    "prebuild": "run-s :init_*",
     "build": "run-p build:*",
-    "build:css": "mkdir -p ./public/css ; cp -R ./node_modules/semantic-ui-css-latolatin/dist/* ./public/css/",
+    "build:css": "cp -R ./node_modules/semantic-ui-css-latolatin/dist/* ./dist/public/css/",
     "build:server": "babel -s inline -x .js,.jsy code -Dd dist",
     "build:app": "babel-node ./rollup.cfg.jsy",
+    "prewatch": "run-s :init_* build:css",
     "watch": "run-p watch:*",
     "watch:server": "npm -s run build:server -- --watch",
     "watch:app": "npm -s run build:app -- --watch"
