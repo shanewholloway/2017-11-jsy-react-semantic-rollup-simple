@@ -1,9 +1,9 @@
 export function asJSONServerSentEvents(res, subscriptionSet) ::
   res.socket.setTimeout(0).setKeepAlive(true).setNoDelay(true)
   res.writeHead @ 200, @:
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
+    'Content-Type': 'text/event-stream'
+    'Cache-Control': 'no-cache'
+    'Connection': 'keep-alive'
 
   res.once @ 'error', shutdown
   res.once @ 'close', shutdown
