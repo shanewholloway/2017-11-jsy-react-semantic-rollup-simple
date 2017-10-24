@@ -1,0 +1,27 @@
+import rpi from './rollup_plugins.jsy'
+
+export const jsy_babel_cfg = @{}
+  presets: @[]
+    @[] 'jsy', @{} no_stage_3: true, modules: false
+    @[] 'react'
+
+  plugins: @[]
+    'external-helpers'
+
+export function jsyPluginsForEnv(opt={}) ::
+  return @#
+    rpi.resolve @:
+      browser: true, main: true, module: true, jsnext: true,
+      customResolveOptions: @:
+        basedir: __dirname
+
+    rpi.commonjs @:
+      include: 'node_modules/**'
+
+    rpi.babel @:
+      exclude: 'node_modules/**'
+      babelrc: false
+      highlightCode: false
+      presets: jsy_babel_cfg.presets
+      plugins: jsy_babel_cfg.plugins
+

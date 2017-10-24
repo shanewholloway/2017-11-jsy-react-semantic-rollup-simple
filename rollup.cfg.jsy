@@ -1,259 +1,55 @@
-const pify = require('pify')
-const path = require('path')
-const crypto = require('crypto')
-const zlib = require('zlib')
-const fs = require('fs')
-const fs_p = pify @ require('fs')
-const { minify } = require('uglify-es')
+import {bundle, buildAll, watchAndBuild} from './tools/rollup.jsy'
+import {depsPluginsForEnv} from './tools/rollup_deps.jsy'
+import {jsyPluginsForEnv} from './tools/rollup_jsy.jsy'
 
-const rollup = require('rollup')
-const chokidar = require('chokidar')
-
-const rpi = @:
-    babel: require @ 'rollup-plugin-babel'
-
-  , resolve: require @ 'rollup-plugin-node-resolve'
-  , commonjs: require @ 'rollup-plugin-commonjs'
-
-  , virtual_alias: require @ 'rollup-plugin-virtual-alias'
-  , replace: require @ 'rollup-plugin-replace'
-
-  , viz: require @ 'rollup-plugin-visualizer'
-  , uglify: require @ 'rollup-plugin-uglify'
-  , progress: require @ 'rollup-plugin-progress'
-
-
-function _flatten(...args) ::
-  const plugins = args
-    .reduce @ (a,b) => a.concat(b), []
-    .reduce @ (a,b) => a.concat(b), []
-    .filter @ e => e
-  return plugins
-
-const jsy_babel_cfg = @:
-    presets: @#
-        @# 'jsy', @: no_stage_3: true, modules: false
-      , @# 'react'
-
-  , plugins: @#
-        'external-helpers'
-
-
-export const jsyPluginsForEnv = (opt={}) => @#
-    rpi.resolve @: browser: true, main: true, module: true, jsnext: true,
-      customResolveOptions: @:
-        basedir: __dirname
-
-  , rpi.commonjs @:
-        include: 'node_modules/**'
-
-  , rpi.babel @:
-        exclude: 'node_modules/**'
-      , babelrc: false, highlightCode: false
-      , presets: jsy_babel_cfg.presets
-      , plugins: jsy_babel_cfg.plugins
-
-
-export const depsPluginsForEnv = (opt={}) => @#
-    rpi.resolve @: browser: true, main: true, module: true, jsnext: true
-  , rpi.commonjs @:
-        include: 'node_modules/**'
-      , namedExports: @:
-          'node_modules/react/react.js': @# 'Component', 'Children', 'isValidElement', 'cloneElement', 'createElement'
-        , 'node_modules/react/index.js': @# 'Component', 'Children', 'isValidElement', 'cloneElement', 'createElement'
-
-
-export const stdPrePluginsForEnv = (opt={}) => @#
-    rpi.virtual_alias @:
-      'react': 'preact-compat',
-      'react-dom': 'preact-compat',
-
-  , rpi.replace @:
-      'process.env.NODE_ENV': JSON.stringify @
-        opt.production ? 'production' : 'development'
-
-export const stdPostPluginsForEnv = (opt={}) => @#
-    opt.viz && rpi.viz @: filename: `./dist/public/${opt.source.name}${opt.suffix}.stats.html`
-
-  , opt.production && rpi.uglify @
-      @: compress: { warnings: false }
-       , output: { comments: false }
-       , sourceMap: false
-    , minify
-
-  , hash_and_gzip_local_rollup_plugin()
-  , opt.progress && rpi.progress @:
-      clearLine: opt.progress.clearLine
-
-
-function hash_and_gzip_local_rollup_plugin() ::
-  const minSize = 14e3
-  return @:
-      name: 'hash-gzip-local-plugin'
-    , async onwrite(buildOpts) ::
-        try ::
-          const file = buildOpts.file
-          const [h, compressed] = await Promise.all @#
-              hashFile(file), compressFile(file)
-
-          const fname_parts = path.parse(file)
-          fname_parts.base = null
-          fname_parts.ext = `.${h}${fname_parts.ext}`
-
-          const dest_hash = path.format(fname_parts)
-          await Promise.all @#
-              fs_p.copyFile @ file, dest_hash
-            , compressed && fs_p.copyFile @ file+'.gz', dest_hash+'.gz'
-          await fs_p.writeFile @ file+'.lnk', path.basename(dest_hash)
-        catch err ::
-          console.error @ "ERROR", err
-
-  function hashFile(file, algorithm='sha1') ::
-    return new Promise @ function(resolve, reject) ::
-      fs.createReadStream(file)
-        .pipe @ crypto.createHash(algorithm)
-        .on @ 'error', reject
-        .on @ 'data', function(h) ::
-          resolve @ h.toString('hex')
-
-  function compressFile(file) ::
-    return fs_p.stat(file).then @ stat => ::
-      if stat.size <= minSize :: return false
-      return new Promise @ function(resolve, reject) ::
-        fs.createReadStream(file)
-          .pipe @ zlib.createGzip()
-          .pipe @ fs.createWriteStream @ `${file}.gz`
-          .on @ 'error', reject
-          .on @ 'finish', function() :: resolve(true)
-    
-
-export async function bundle_vendor(source, opt={}) ::
-  opt.source = path.parse @ source
-  opt.suffix = opt.production ? '.min' : ''
-
-  const globalModules = @:
-
-  const input = @:
-      input: source
-    , plugins: _flatten @ 
-        stdPrePluginsForEnv(opt)
-      , depsPluginsForEnv(opt)
-      , stdPostPluginsForEnv(opt)
-    , external(module) ::
-        return !! globalModules[module]
-
-  const output = @:
-      format: 'iife'
-    , name: opt.source.name
-    , file: `./dist/public/${opt.source.name}${opt.suffix}.js`
-    , sourcemap: opt.sourcemap
-    , globals(module) ::
-        return globalModules[module]
-
-  return @: input, output, opt
-
-export async function bundle_jsy(source, opt={}) ::
-  opt.source = path.parse @ source
-  opt.suffix = opt.production ? '.min' : ''
-
-  const globalModules = @:
-      'react': 'window.React'
-    , 'react-dom': 'window.ReactDOM'
-
-  const input = @:
-      input: source
-    , plugins: _flatten @
-        stdPrePluginsForEnv(opt)
-      , jsyPluginsForEnv(opt)
-      , stdPostPluginsForEnv(opt)
-
-    , external(module) ::
-        return !! globalModules[module]
-
-  const output = @:
-      format: 'iife'
-    , name: opt.source.name
-    , file: `./dist/public/${opt.source.name}${opt.suffix}.js`
-    , sourcemap: opt.sourcemap
-    , globals(module) ::
-        return globalModules[module]
-
-  return @: input, output, opt
-
-
-export const opt_production = @:
-    production: true, sourcemap: false
-  , progress: @: clearLine: false
-  , viz: true
-export const opt_development = @:
-    production: false, sourcemap: true
-  , progress: true
-  , viz: true
-
-
-async function buildBundle(bundle_options) ::
-  if ! bundle_options :: return
-  let {input, output} = await bundle_options
-  input = Object.assign @ {}, input
-  output = Object.assign @ {}, output
-
-  let bundle = await rollup.rollup(input)
-  await bundle.write(output)
-
-  return async function () ::
-    input.cache = bundle
-    bundle = await rollup.rollup(input)
-    await bundle.write(output)
-    return bundle
-
-async function main(withWatcher) ::
-  await buildBundle @ bundle_vendor @ './app/vendor.js', opt_development
-  //await buildBundle @ bundle_vendor @ './app/vendor.js', opt_production
+export async function buildWebApp(opt, withWatcher) ::
+  const builders = @#
+    bundle_vendor @ opt, './app/vendor.js'
 
   const rebuilders = @#
-    , await buildBundle @ bundle_jsy @ './app/main.jsy', opt_development
-    //, await buildBundle @ bundle_jsy @ './app/main.jsy', opt_production
+    bundle_jsy @ opt, './app/main.jsy'
+    bundle_jsy @ opt, './app/simple.jsy'
 
-    , await buildBundle @ bundle_jsy @ './app/simple.jsy', opt_development
-    //, await buildBundle @ bundle_jsy @ './app/simple.jsy', opt_production
+  buildAll @ builders, rebuilders
 
-  if ! withWatcher :: return
+  if withWatcher ::
+    return watchAndBuild @ rebuilders
 
-  let inprogress_changes = null
-  async function rebuild_for_change(path) ::
-    if null !== inprogress_changes ::
-      return inprogress_changes.push(path)
 
-    inprogress_changes = [path]
-    await new Promise @ resolve => setTimeout(resolve, 50)
-    console.time('rebuild for changes')
-    try ::
-      await Promise.all @
-        rebuilders.map @ fn => fn && fn()
-      console.timeEnd('rebuild for changes')
-    catch err ::
-      console.error @ err
-    finally ::
-      inprogress_changes = null
+const bundle_vendor = (opt, source) =>
+  bundle @: opt, source
+    plugins: depsPluginsForEnv(opt)
+    globalModules: @{}
 
-  ::
-    const w_app = chokidar
-      .watch @ './app',
-        @: ignoreInitial: true, ignorePermissionErrors: true
-      .on @ 'change', rebuild_for_change
-
-    const w_setup = chokidar
-      .watch @ ['./package.json', __filename, './rollup.cfg.jsy'],
-        @: ignoreInitial: true
-      .on @ 'ready', function () ::
-          console.log @ `Watching for changes`, __filename
-      .on @ 'change', function (path) ::
-          console.log @ `Setup changed; shutting down watchers ("${path}")`
-          w_app.close()
-          w_setup.close()
+const bundle_jsy = (opt, source) =>
+  bundle @: opt, source
+    plugins: jsyPluginsForEnv(opt)
+    globalModules: @{}
+      'react': 'window.React'
+      'react-dom': 'window.ReactDOM'
 
 
 if module === require.main ::
-  main @
-    process.argv.includes @ '--watch'
+  const opt_production = @{}
+    production: true
+    sourcemap: false
+    progress: @{}
+      clearLine: false
+    viz: true
+    preact: false
+
+  const opt_development = @{}
+    production: false
+    sourcemap: true
+    progress: true
+    viz: true
+    preact: false
+
+  const opt = 'production' === process.env.NODE_ENV
+    ? opt_production : opt_development
+
+  const withWatcher = process.argv.includes @ '--watch'
+
+  buildWebApp @
+    opt, withWatcher,
   .catch @ console.error

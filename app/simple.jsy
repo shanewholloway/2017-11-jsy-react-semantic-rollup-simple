@@ -1,4 +1,2 @@
-console.log @ 'Shane 834 years to reload'
 console.log @ window.live_changes
-
 
