@@ -9,7 +9,7 @@ export * from './rollup_std.jsy'
 
 import {stdPrePluginsForEnv, stdPostPluginsForEnv} from './rollup_std.jsy'
 
-export function bundle({source, opt, globalModules, plugins}) ::
+export function bundle({source, opt, globalModules, plugins, format, amd}) ::
   if 'string' !== typeof source :: throw new TypeError @ `Expected string source parameter`
   if null == opt :: throw new TypeError @ `Expected valid "opt" object parameter`
   if null == globalModules :: globalModules = {}
@@ -28,13 +28,18 @@ export function bundle({source, opt, globalModules, plugins}) ::
     external(module) ::
       return !! globalModules[module]
 
+  if ! format ::
+    format = amd ? 'amd' : 'iife'
+
   const output = @{}
-    format: 'iife'
+    format
     name: opt.source.name
     file: `./dist/public/${opt.source.name}${opt.suffix}.js`
     sourcemap: opt.sourcemap
     globals(module) ::
       return globalModules[module]
+
+  if amd && 'amd' === format :: output.amd = amd
 
   return asRollupBuildClosure @:
     input, output, opt
