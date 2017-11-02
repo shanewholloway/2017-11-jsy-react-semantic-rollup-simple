@@ -23,6 +23,7 @@ const bundle_vendor = (opt, source) =>
 
 const bundle_jsy = (opt, source) =>
   bundle @: opt, source
+    //amd: @: id: source, define: 'awesome'
     plugins: jsyPluginsForEnv(opt)
     globalModules: @{}
       'react': 'window.React'

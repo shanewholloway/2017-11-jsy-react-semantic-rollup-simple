@@ -5,8 +5,8 @@
   "license": "BSD-2-Clause",
   "homepage": "https://github.com/shanewholloway/2017-09-14-jsy-react-semantic-rollup",
   "dependencies": {
-    "ec-pem": "^0.16.0",
-    "express": "^4.15.4",
+    "ec-pem": "^0.17.0",
+    "express": "^4.16.2",
     "express-static-gzip": "^0.3.0",
     "lodash": "^4.17.4",
     "spdy": "^3.4.7"
@@ -24,7 +24,7 @@
     "react-dom": "^16.0.0",
     "rollup": "0.50.0",
     "rollup-plugin-babel": "^3.0.2",
-    "rollup-plugin-commonjs": "^8.2.4",
+    "rollup-plugin-commonjs": "^8.2.6",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-progress": "^0.4.0",
     "rollup-plugin-replace": "^2.0.0",
@@ -33,7 +33,7 @@
     "rollup-plugin-visualizer": "^0.3.1",
     "semantic-ui-css-latolatin": "2.2.13-f2",
     "semantic-ui-react": "^0.75.1",
-    "uglify-es": "^3.1.5"
+    "uglify-es": "^3.1.6"
   },
   "babel": {
     "presets": "jsy/lean"
