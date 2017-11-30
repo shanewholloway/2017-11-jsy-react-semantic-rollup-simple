@@ -1,9 +1,0 @@
-import rpi from './rollup_plugins.jsy'
-
-export function depsPluginsForEnv(opt={}) ::
-  return @#
-    rpi.resolve @:
-      browser: true, main: true, module: true, jsnext: true,
-
-    rpi.commonjs @:
-      include: 'node_modules/**'
