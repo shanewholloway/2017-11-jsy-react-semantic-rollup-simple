@@ -17,6 +17,7 @@ export default @{}
       format: 'iife'
       viz: true, gzip: true
       outdir: './dist/public'
+      vendorGlobalModules: @{}
       globalModules: @{}
         'react': 'window.React'
         'react-dom': 'window.ReactDOM'

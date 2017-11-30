@@ -1,5 +1,4 @@
 import * as fs_extra from 'fs-extra'
-import {execSync} from 'child_process'
 import {parse as path_parse, dirname} from 'path'
 import {minify} from 'uglify-es'
 import {bundle, jsy_plugin, buildAll, watchAndBuild} from 'jsy-rollup-bundler'
@@ -35,7 +34,7 @@ async function main(argv=process.argv) ::
       `babel-node ${__filename} --watch-impl`
 
   try ::
-    var bundlers = @{}
+    var allBundlers = @{}
       svr: await initBundlers @ svr_cfg
       app: await initBundlers @ app_cfg
 
@@ -49,19 +48,19 @@ async function main(argv=process.argv) ::
 
 
   async function _do_build() ::
-    for const [key, bndler] of Object.entries @ bundlers ::
-      if ! bndler :: continue
-      await buildAll @ bndler.full
+    for const [key, bundler] of Object.entries @ allBundlers ::
+      if ! bundler :: continue
+      await buildAll @ bundler.full
 
   async function _do_watch() ::
     const w = watchAndBuild(on_restart)
     w.restartOn @ config_files
 
-    for const [key, bndler] of Object.entries @ bundlers ::
-      if ! bndler :: continue
-      for const ea of bndler.once ::
+    for const [key, bundler] of Object.entries @ allBundlers ::
+      if ! bundler :: continue
+      for const ea of bundler.once ::
         w.buildOnce @ ea, ea.watch
-      for const ea of bndler.rebuild ::
+      for const ea of bundler.rebuild ::
         w.rebuildOn @ ea, ea.watch
 
 
@@ -114,6 +113,9 @@ function opt_clone(opt, source) ::
 
 
 function bundle_vendor(opt, source) ::
+  opt = Object.create @ opt
+  opt.globalModules = opt.vendorGlobalModules
+  opt.externals = opt.vendorExternals
   return bundle_plugins @ opt, source, @[]
 
 function bundle_jsy(opt, source) ::

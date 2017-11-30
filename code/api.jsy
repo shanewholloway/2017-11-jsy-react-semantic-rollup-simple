@@ -7,7 +7,8 @@ import {initExpressLiveLoader} from './live-server'
 const webroot = path.join @ __dirname, 'public'
 const api = express()
 
-initExpressLiveLoader(api, webroot)
+if 'production' !== process.env.NODE_ENV ::
+  initExpressLiveLoader(api, webroot)
 
 api.set @ 'views', `${__dirname}/views`
 api.get @ '/', (req, res) => res.render('index')
