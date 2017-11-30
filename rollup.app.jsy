@@ -1,15 +1,22 @@
 export default @{}
-  jsy_roots: @[]
-    @{} roots: @[] './app/main.jsy'
-    @{} roots: @[] './app/simple.jsy'
-        watch: @[] './app'
-
   vendor: @[]
     './app/vendor.js'
 
+  jsy: @[]
+    @{} roots: @[] './app/main.jsy'
+
+    @{} roots: @[] './app/simple.jsy'
+
+  files: @[]
+    @{} from: './node_modules/semantic-ui-css-latolatin/dist'
+        to: './dist/public/css/'
+        watch: false
+
   opt: @{}
     common: @{}
-      //viz: true
+      format: 'iife'
+      viz: true, gzip: true
+      outdir: './dist/public'
       globalModules: @{}
         'react': 'window.React'
         'react-dom': 'window.ReactDOM'

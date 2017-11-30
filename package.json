@@ -1,15 +1,12 @@
 {
   "private": true,
-  "name": "2017-09-14-jsy-react-semantic-rollup",
+  "name": "2017-11-jsy-react-semantic-rollup-simple",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
   "license": "BSD-2-Clause",
-  "homepage": "https://github.com/shanewholloway/2017-09-14-jsy-react-semantic-rollup",
+  "homepage": "https://github.com/shanewholloway/2017-11-jsy-react-semantic-rollup-simple",
   "dependencies": {
-    "ec-pem": "^0.17.0",
     "express": "^4.16.2",
-    "express-static-gzip": "^0.3.1",
-    "lodash": "^4.17.4",
-    "spdy": "^3.4.7"
+    "express-static-gzip": "^0.3.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -17,10 +14,10 @@
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-jsy": "^0.9.2",
     "babel-preset-react": "^6.24.1",
+    "builtins": "^1.0.3",
+    "fs-extra": "^4.0.2",
     "jsy-rollup-bundler": "github:shanewholloway/jsy-rollup-bundler",
-    "npm-run-all": "^4.1.2",
-    "preact": "^8.2.6",
-    "preact-compat": "^3.17.0",
+    "nodemon": "^1.12.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "rollup": "0.52.0",
@@ -41,17 +38,11 @@
     "presets": "jsy/lean"
   },
   "scripts": {
-    ":init_mk_dist": "mkdir -p ./dist/public/css",
-    "prestart": "npm run -s build",
+    "build": "babel-node ./rollup.cfg.jsy",
+    "watch": "npm -s run build -- --watch",
     "start": "node ./dist/server.js",
-    "prebuild": "run-s :init_*",
-    "build": "run-p build:*",
-    "build:css": "cp -R ./node_modules/semantic-ui-css-latolatin/dist/* ./dist/public/css/",
-    "build:server": "babel -s inline -x .js,.jsy code -Dd dist",
-    "build:app": "babel-node ./rollup.cfg.jsy",
-    "prewatch": "run-s :init_* build:css",
-    "watch": "run-p watch:*",
-    "watch:server": "npm -s run build:server -- --watch",
-    "watch:app": "npm -s run build:app -- --watch"
+    "start:dev": "nodemon -d 1 --ignore ./dist/public ./dist/server.js",
+    "pretest": "npm -s run build",
+    "test": "true"
   }
 }

@@ -1,4 +1,4 @@
-export function asJSONServerSentEvents(res, subscriptionSet) ::
+export default function asJSONServerSentEvents(res, subscriptionSet) ::
   res.socket.setTimeout(0).setKeepAlive(true).setNoDelay(true)
   res.writeHead @ 200, @:
     'Content-Type': 'text/event-stream'

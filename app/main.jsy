@@ -1,5 +1,5 @@
 console.log @ 'top of main', new Date()
-import {connectReloadEventSource, reloadDataLiveElements} from './live-loader.jsy'
+import {connectReloadEventSource, reloadDataLiveElements} from './live-loader'
 
 
 if 'production' !== process.env.NODE_ENV ::

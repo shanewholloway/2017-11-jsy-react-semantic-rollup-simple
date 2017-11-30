@@ -1,8 +1,17 @@
-import * as path from 'path'
-import app_cfg from './rollup.app.jsy'
+import * as fs_extra from 'fs-extra'
+import {execSync} from 'child_process'
+import {parse as path_parse, dirname} from 'path'
 import {minify} from 'uglify-es'
-import {bundle, buildAll, watchAndBuild} from 'jsy-rollup-bundler'
+import {bundle, jsy_plugin, buildAll, watchAndBuild} from 'jsy-rollup-bundler'
 
+import app_cfg from './rollup.app.jsy'
+import svr_cfg from './rollup.svr.jsy'
+
+const config_files = @[]
+  './package.json'
+  './rollup.cfg.jsy'
+  './rollup.app.jsy'
+  './rollup.svr.jsy'
 
 const rpi = @{}
   babel: require @ 'rollup-plugin-babel'
@@ -21,87 +30,106 @@ const rpi = @{}
 
 
 async function main(argv=process.argv) ::
-  const opt = {}
-  Object.assign @ opt, app_cfg.opt.common,
-    'production' === process.env.NODE_ENV
-      ? app_cfg.opt.production
-      : app_cfg.opt.development
+  if argv.includes @ '--watch' ::
+    return watchAndBuild.forever @
+      `babel-node ${__filename} --watch-impl`
 
   try ::
-    const bundlers = initBundlers @ opt
+    var bundlers = @{}
+      svr: await initBundlers @ svr_cfg
+      app: await initBundlers @ app_cfg
 
-    if argv.includes @ '--watch' ::
-      const w = watchAndBuild()
-      w.restartOn @#
-        './package.json'
-        './rollup.cfg.jsy'
-        './rollup.app.jsy'
-
-      w.buildOnce @ bundlers.once, app_cfg.vendor
-      for const ea of bundlers.rebuild ::
-        w.rebuildOn @ ea, ea.watch
+    if argv.includes @ '--watch-impl' ::
+      await _do_watch()
     else ::
-      await buildAll @ bundlers.full
+      await _do_build()
   catch err ::
     console.error @ err
     process.exit(1)
 
 
+  async function _do_build() ::
+    for const [key, bndler] of Object.entries @ bundlers ::
+      if ! bndler :: continue
+      await buildAll @ bndler.full
 
-function initBundlers(opt) ::
-  if null == opt.outdir ::
-    opt.outdir = './dist/public'
+  async function _do_watch() ::
+    const w = watchAndBuild(on_restart)
+    w.restartOn @ config_files
 
-  opt.std_plugins = @{}
-    pre: pre_plugins(opt).filter(e=>e)
-    post: post_plugins(opt).filter(e=>e)
+    for const [key, bndler] of Object.entries @ bundlers ::
+      if ! bndler :: continue
+      for const ea of bndler.once ::
+        w.buildOnce @ ea, ea.watch
+      for const ea of bndler.rebuild ::
+        w.rebuildOn @ ea, ea.watch
 
-  const once = app_cfg.vendor.map @
-    source => bundle_vendor @ opt, source
+
+async function initBundlers(bndl_cfg) ::
+  const opt = {}
+  Object.assign @ opt, bndl_cfg.opt.common,
+    'production' === process.env.NODE_ENV
+      ? bndl_cfg.opt.production
+      : bndl_cfg.opt.development
+
+  let once = [], rebuild = []
+
+  await fs_extra.ensureDir @ opt.outdir
+
+  if bndl_cfg.vendor ::
+    once = once.concat @ bndl_cfg.vendor.map @
+      source =>
+        Object.assign @
+          bundle_vendor @ opt_clone(opt, source), source
+          @{} watch: source
       
-  const rebuild = app_cfg.jsy_roots.map @
-    ({roots, watch}) => ::
-      const ans = roots.map @ source =>
-        bundle_jsy @ opt, source
-      ans.watch = watch || roots
-      return ans
+  if bndl_cfg.jsy ::
+    rebuild = rebuild.concat @ bndl_cfg.jsy.map @
+      entry => ::
+        let {roots, watch} = entry
+        if Array.isArray(entry) ::
+          roots = entry
+        else if 'string' === typeof entry ::
+          roots = [entry]
 
-  console.dir @ rebuild, @{} colors: true
+        const ans = roots.map @ source =>
+          bundle_jsy @ opt_clone(opt, source), source
+        ans.watch = watch || roots.map @ p=>dirname(p)
+        return ans
+
+  if bndl_cfg.files ::
+    rebuild = rebuild.concat @ bndl_cfg.files.map @
+      ({from, to, watch}) =>
+        Object.assign @
+          bundle_files @ from, to
+          @{} watch: undefined === watch ? from : watch || null
+
   const full = [].concat @ once, ...rebuild
   return @{} once, rebuild, full
+
+function opt_clone(opt, source) ::
+  return Object.create @ opt, @{}
+    source: @{} value: path_parse(source)
 
 
 
 function bundle_vendor(opt, source) ::
-  return bundle @: opt, source
-    globalModules: opt.globalModules
-    plugins: [].concat @
-      opt.std_plugins.pre
-      opt.std_plugins.post
+  return bundle_plugins @ opt, source, @[]
 
 function bundle_jsy(opt, source) ::
-  return bundle @: opt, source
-    globalModules: opt.globalModules
-    //amd: @: id: source, define: 'awesome'
-    plugins: [].concat @
-      opt.std_plugins.pre
-      @[] jsy_plugin(opt)
-      opt.std_plugins.post
+  return bundle_plugins @ opt, source, @[]
+    jsy_plugin @:
+      plugins: @[] 'external-helpers'
+      presets: @[] 'react'
+
+function bundle_files(from, to) ::
+  return async () => ::
+    await fs_extra.copy @ from, to
+      @{} preserveTimestamps: true
 
 
-function jsy_plugin(opt={}) ::
-  return rpi.babel @:
-    exclude: 'node_modules/**'
-    babelrc: false
-    highlightCode: false
-    presets: @[]
-      @[] 'jsy', @{} no_stage_3: true, modules: false
-      @[] 'react'
-    plugins: @[] 'external-helpers'
-
-
-function pre_plugins(opt={}) ::
-  return @#
+function bundle_plugins(opt={}, source, plugins) ::
+  const all_plugins = @[]
     opt.aliasModules &&
       rpi.virtual_alias @ opt.aliasModules
 
@@ -110,27 +138,35 @@ function pre_plugins(opt={}) ::
         opt.production ? 'production' : 'development'
 
     rpi.resolve @:
-      browser: true, main: true, module: true, jsnext: true,
-      customResolveOptions: @{} basedir: __dirname
+      browser: true, main: true, module: true, jsnext: true
+      extensions: @[] '.js', '.jsy'
 
     rpi.commonjs @:
       include: 'node_modules/**'
 
+    ... plugins
 
-function post_plugins(opt={}) ::
-  return @#
     opt.viz &&
-      rpi.viz @: filename: `${opt.outdir}/${opt.source.name}${opt.suffix}.stats.html`
+      rpi.viz @: filename: `${opt.outdir}/${opt.source.name}.stats.html`
 
     opt.uglify &&
       rpi.uglify @ opt.uglify, minify
 
-    rpi.hash_n_gzip()
+    opt.gzip &&
+      rpi.hash_n_gzip()
 
     opt.progress &&
       rpi.progress @:
         clearLine: opt.progress.clearLine
 
+  return bundle @: opt, source
+    globalModules: opt.globalModules
+    plugins: all_plugins.filter @ e=>e
+
+
+function on_restart(path) ::
+  // ensure the process exits
+  setTimeout @ () => process.exit(0), 300
 
 if module === require.main :: main()
 

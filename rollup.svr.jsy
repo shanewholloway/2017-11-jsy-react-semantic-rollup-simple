@@ -1,0 +1,27 @@
+import builtins from 'builtins'
+export default @{}
+  jsy: @[]
+    @{} roots: @[] './code/server.jsy'
+
+  files: @[]
+    @{} from: './code/views'
+        to: './dist/views/'
+
+  opt: @{}
+    common: @{}
+      outdir: './dist'
+      format: 'cjs'
+      externals: @[]
+        ... builtins
+        'express'
+        'express-static-gzip'
+        'chokidar'
+
+    development: @{}
+      production: false, sourcemap: true
+      progress: @{} clearLine: false
+
+    production: @{}
+      production: true, sourcemap: true
+      progress: @{} clearLine: false
+

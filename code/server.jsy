@@ -1,21 +1,11 @@
-const {createECDH} = require('crypto')
-const ec_pem = require('ec-pem')
-const {createSelfSignedCertificate} = require('ec-pem/cert')
-const spdy = require('spdy')
-
-const {api} = require('./api')
+import http from 'http'
+import {api} from './api'
 
 async function main() ::
-  const {key, cert} = await createSelfSignedCertificate @
-    'localhost', ec_pem.generate('prime256v1')
-
-  const server = spdy.createServer @: key, cert
-
-  server.on @ 'request', api
-
-  server.listen @ 3000, function() ::
+  http.createServer @ api
+  .listen @ 3000, function() ::
     const {port} = this.address()
-    const url = `https://127.0.0.1:${port}`
+    const url = `http://127.0.0.1:${port}`
 
     console.log @
     console.log @ `READY!`
