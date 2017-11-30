@@ -10,7 +10,7 @@ const rpi = @{}
   resolve: require @ 'rollup-plugin-node-resolve'
   commonjs: require @ 'rollup-plugin-commonjs'
 
-  //virtual_alias: require @ 'rollup-plugin-virtual-alias'
+  virtual_alias: require @ 'rollup-plugin-virtual-alias'
   replace: require @ 'rollup-plugin-replace'
 
   viz: require @ 'rollup-plugin-visualizer'
@@ -102,6 +102,9 @@ function jsy_plugin(opt={}) ::
 
 function pre_plugins(opt={}) ::
   return @#
+    opt.aliasModules &&
+      rpi.virtual_alias @ opt.aliasModules
+
     rpi.replace @:
       'process.env.NODE_ENV': JSON.stringify @
         opt.production ? 'production' : 'development'

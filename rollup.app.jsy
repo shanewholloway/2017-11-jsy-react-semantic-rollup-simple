@@ -14,6 +14,12 @@ export default @{}
         'react': 'window.React'
         'react-dom': 'window.ReactDOM'
 
+      /*
+      aliasModules: @{}
+        'react': 'preact-compat'
+        'react-dom': 'preact-compat'
+      */
+
     development: @{}
       production: false, sourcemap: true
       progress: true
