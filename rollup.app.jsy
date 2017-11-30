@@ -29,7 +29,7 @@ export default @{}
 
     development: @{}
       production: false, sourcemap: true
-      progress: true
+      progress: @{} clearLine: false
 
     production: @{}
       production: true, sourcemap: false

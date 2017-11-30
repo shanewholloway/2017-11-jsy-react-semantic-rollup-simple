@@ -1,14 +1,8 @@
 console.log @ 'top of main', new Date()
-import {connectReloadEventSource, reloadDataLiveElements} from './live-loader'
 
-
+import connectReload from './live-loader'
 if 'production' !== process.env.NODE_ENV ::
-  const uid = Date.now().toString(36)
-  window.es = connectReloadEventSource @ '__live__', live_changes => ::
-    window.live_changes = live_changes
-    console.log @ 'does this still work?', uid
-
-    reloadDataLiveElements(live_changes, document)
+  window.es = connectReload()
 
 import React from 'react'
 import ReactDOM from 'react-dom'

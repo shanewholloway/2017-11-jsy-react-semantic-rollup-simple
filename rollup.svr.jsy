@@ -1,4 +1,8 @@
 import builtins from 'builtins'
+import pkg from './package.json'
+
+const dependencies = Object.keys @ pkg.dependencies
+
 export default @{}
   jsy: @[]
     @{} roots: @[] './code/server.jsy'
@@ -13,6 +17,7 @@ export default @{}
       format: 'cjs'
       externals: @[]
         ... builtins
+        ... dependencies
         'express'
         'express-static-gzip'
         'chokidar'

@@ -1,2 +1,7 @@
-console.log @ window.live_changes
+import connectReload from './live-loader'
+if 'production' !== process.env.NODE_ENV ::
+  window.es = connectReload()
+
+const v = 127
+console.log @ window.live_changes, v
 

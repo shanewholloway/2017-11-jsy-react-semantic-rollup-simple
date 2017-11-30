@@ -12,7 +12,6 @@ my current favorite technologies:
   - Backend :
     - [node 8.5](https://nodejs.org)
     - [express 4](http://expressjs.com)
-    - [spdy](https://github.com/spdy-http2/node-spdy) for http2
 
 ## Installing
 

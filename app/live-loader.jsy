@@ -1,7 +1,10 @@
 
-export function connectReloadEventSource(eventSourceUrl, update) ::
+export default connectReloadEventSource
+export function connectReloadEventSource(eventSourceUrl='__live__', update) ::
   if null == update ::
+    const uid = Date.now().toString(36)
     update = function (live_changes) ::
+      console.log @ `Live load (${uid})`
       reloadDataLiveElements(live_changes, document)
 
   const _global_key_ = `@@live-reload ${eventSourceUrl}`
@@ -41,3 +44,4 @@ export function replaceElement(element, updates) ::
 
   element.parentNode.replaceChild(el, element)
   return el
+
