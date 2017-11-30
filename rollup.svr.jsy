@@ -15,6 +15,7 @@ export default @{}
     common: @{}
       outdir: './dist'
       format: 'cjs'
+      suffix: ''
       externals: @[]
         ... builtins
         ... dependencies

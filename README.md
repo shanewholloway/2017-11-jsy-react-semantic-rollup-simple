@@ -1,4 +1,4 @@
-# 2017-09-14 jsy-react-semantic-rollup
+# 2017-11 jsy-react-semantic-rollup-simple 
 
 Pursing control and small javascript bundle sizes using
 my current favorite technologies:
@@ -16,8 +16,8 @@ my current favorite technologies:
 ## Installing
 
 ```bash
-$ git clone git@github.com:shanewholloway/2017-09-14-jsy-react-semantic-rollup.git
-$ cd 2017-09-14-jsy-react-semantic-rollup
+$ git clone git@github.com:shanewholloway/2017-11-jsy-react-semantic-rollup-simple.git
+$ cd 2017-11-jsy-react-semantic-rollup-simple
 $ npm install .
 $ npm run build  # or npm run watch
 $ npm run start

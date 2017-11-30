@@ -16,7 +16,7 @@
     "babel-preset-react": "^6.24.1",
     "builtins": "^1.0.3",
     "fs-extra": "^4.0.2",
-    "jsy-rollup-bundler": "github:shanewholloway/jsy-rollup-bundler",
+    "jsy-rollup-bundler": "^0.3.2",
     "nodemon": "^1.12.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
@@ -38,6 +38,7 @@
     "presets": "jsy/lean"
   },
   "scripts": {
+    "clean": "rm -rf ./dist",
     "build": "babel-node ./rollup.cfg.jsy",
     "watch": "npm -s run build -- --watch",
     "start": "node ./dist/server.js",

@@ -8,6 +8,8 @@ import svr_cfg from './rollup.svr.jsy'
 
 const config_files = @[]
   './package.json'
+  './package-lock.json'
+  './yarn.lock'
   './rollup.cfg.jsy'
   './rollup.app.jsy'
   './rollup.svr.jsy'

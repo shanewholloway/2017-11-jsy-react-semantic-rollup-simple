@@ -1,6 +1,6 @@
 console.log @ 'top of main', new Date()
 
-import connectReload from './live-loader'
+import connectReload from 'jsy-rollup-bundler/dist/live-loader.mjs'
 if 'production' !== process.env.NODE_ENV ::
   window.es = connectReload()
 
@@ -13,9 +13,7 @@ function DummyComponent() ::
   return @
     <div>
       <h1>Neato keen, again!</h1>
-      <Progress percent={60} active>
-        Active
-      </Progress>
+      <Progress percent={60} active>Active</Progress>
     </div>
 
 ::
