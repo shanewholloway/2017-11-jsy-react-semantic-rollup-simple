@@ -8,9 +8,11 @@ my current favorite technologies:
     - [babel-preset-jsy](https://github.com/shanewholloway/babel-preset-jsy) / [babel-plugin-offside-js](https://github.com/shanewholloway/babel-plugin-offside-js)
     - [semantic-ui](https://semantic-ui.com) and [react.semantic-ui.com](https://react.semantic-ui.com)
     - [react](https://facebook.github.io/react) or [preact](https://preactjs.com)
+    - [fela](http://fela.js.org/) with [react-fela](http://fela.js.org/docs/guides/UsageWithReact.html)
+    - [polished](https://polished.js.org/)
 
   - Backend :
-    - [node 8.5](https://nodejs.org)
+    - [node 8.9](https://nodejs.org)
     - [express 4](http://expressjs.com)
 
 ## Installing
