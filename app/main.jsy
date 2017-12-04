@@ -1,8 +1,7 @@
 console.log @ 'top of main', new Date()
 
 import connectReload from 'jsy-rollup-bundler/dist/live-loader.mjs'
-if 'production' !== process.env.NODE_ENV ::
-  window.es = connectReload()
+if 'production' !== process.env.NODE_ENV :: connectReload()
 
 import React from 'react'
 import ReactDOM from 'react-dom'

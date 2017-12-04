@@ -33,7 +33,7 @@ const rpi = @{}
 async function main(argv=process.argv) ::
   if argv.includes @ '--watch' ::
     return watchAndBuild.forever @
-      `babel-node ${__filename} --watch-impl`
+      `npx babel-node ${__filename} --watch-impl`
 
   try ::
     var allBundlers = @{}
@@ -87,14 +87,14 @@ async function initBundlers(bndl_cfg) ::
   if bndl_cfg.jsy ::
     rebuild = rebuild.concat @ bndl_cfg.jsy.map @
       entry => ::
-        let {roots, watch} = entry
+        let {roots, watch, opts:eopts} = entry
         if Array.isArray(entry) ::
           roots = entry
         else if 'string' === typeof entry ::
           roots = [entry]
 
         const ans = roots.map @ source =>
-          bundle_jsy @ opt_clone(opt, source), source
+          bundle_jsy @ opt_clone(opt, source, eopts), source
         ans.watch = watch || roots.map @ p=>dirname(p)
         return ans
 
@@ -108,9 +108,10 @@ async function initBundlers(bndl_cfg) ::
   const full = [].concat @ once, ...rebuild
   return @{} once, rebuild, full
 
-function opt_clone(opt, source) ::
-  return Object.create @ opt, @{}
+function opt_clone(opt, source, ...extra) ::
+  opt = Object.create @ opt, @{}
     source: @{} value: path_parse(source)
+  return Object.assign @ opt, ...extra
 
 
 
