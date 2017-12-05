@@ -12,7 +12,10 @@ api.set @ 'views', `${__dirname}/views`
 api.get @ '/', (req, res) => res.render('index')
 api.get @ '/index.html', (req, res) => res.render('index')
 
-api.use @ '/', expressStaticGzip(webroot)
+api.use @ '/'
+  expressStaticGzip @
+    webroot
+    @{} maxAge: '4 hr'
 
 export default api
 
