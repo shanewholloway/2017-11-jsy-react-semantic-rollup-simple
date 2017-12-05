@@ -1,22 +1,29 @@
-console.log @ 'top of main', new Date()
-
 import connectReload from 'jsy-rollup-bundler/dist/live-loader.mjs'
 if 'production' !== process.env.NODE_ENV :: connectReload()
 
 import React from 'react'
 import ReactDOM from 'react-dom'
+import {FelaStyle, felaComponent} from './cfg/style'
 import Progress from 'semantic-ui-react/dist/es/modules/Progress'
+import theme from './cfg/theme'
 
+const Heading = felaComponent @ 'h1', props => @:
+  color: props.theme.color
+  fontSize: '20px'
 
 function DummyComponent() ::
   return @
     <div>
-      <h1>Neato keen, again!</h1>
+      <Heading>Welcome to React with JSY</Heading>
       <Progress percent={60} active>Active</Progress>
     </div>
 
 ::
-  const root = document.querySelector('main')
-  ReactDOM.render(<DummyComponent />, root)
+  const root = @
+    <FelaStyle theme={theme}>
+      <DummyComponent />
+    </FelaStyle>
 
-console.log @ 'bottom of main', new Date()
+  const el = document.querySelector('main')
+  ReactDOM.render @ root, el
+
