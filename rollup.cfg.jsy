@@ -78,25 +78,24 @@ async function initBundlers(bndl_cfg) ::
   await fs_extra.ensureDir @ opt.outdir
 
   if bndl_cfg.vendor ::
-    once = once.concat @ bndl_cfg.vendor.map @
-      source =>
-        Object.assign @
-          bundle_vendor @ opt_clone(opt, source), source
-          @{} watch: source
+    once = once.concat @ bndl_cfg.vendor.map @ entry => ::
+      let {source, watch, opt:eopt} = entry
+      if 'string' === typeof entry ::
+        source = entry
+
+      const ans = bundle_vendor @ opt_clone(opt, source, eopt), source
+      ans.watch = watch || source
+      return ans
       
   if bndl_cfg.jsy ::
-    rebuild = rebuild.concat @ bndl_cfg.jsy.map @
-      entry => ::
-        let {roots, watch, opts:eopts} = entry
-        if Array.isArray(entry) ::
-          roots = entry
-        else if 'string' === typeof entry ::
-          roots = [entry]
+    rebuild = rebuild.concat @ bndl_cfg.jsy.map @ entry => ::
+      let {source, watch, opt:eopt} = entry
+      if 'string' === typeof entry ::
+        source = entry
 
-        const ans = roots.map @ source =>
-          bundle_jsy @ opt_clone(opt, source, eopts), source
-        ans.watch = watch || roots.map @ p=>dirname(p)
-        return ans
+      const ans = bundle_jsy @ opt_clone(opt, source, eopt), source
+      ans.watch = watch || dirname(source)
+      return ans
 
   if bndl_cfg.files ::
     rebuild = rebuild.concat @ bndl_cfg.files.map @
@@ -143,8 +142,10 @@ function bundle_plugins(opt={}, source, plugins) ::
         opt.production ? 'production' : 'development'
 
     rpi.resolve @:
-      browser: true, main: true, module: true, jsnext: true
+      module: true, jsnext: true, browser: false, main: false
       extensions: @[] '.js', '.jsy'
+
+    rpi.resolve @: browser: true, main: true
 
     rpi.commonjs @:
       include: 'node_modules/**'

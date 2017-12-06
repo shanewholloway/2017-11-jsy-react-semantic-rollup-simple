@@ -3,9 +3,8 @@ export default @{}
     './app/vendor.js'
 
   jsy: @[]
-    @{} roots: @[] './app/main.jsy'
-
-    @{} roots: @[] './app/simple.jsy'
+    './app/main.jsy'
+    './app/simple.jsy'
 
   files: @[]
     @{} from: './node_modules/semantic-ui-css-latolatin/dist'

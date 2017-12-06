@@ -5,7 +5,7 @@ const dependencies = Object.keys @ pkg.dependencies
 
 export default @{}
   jsy: @[]
-    @{} roots: @[] './code/server.jsy'
+    './code/server.jsy'
 
   files: @[]
     @{} from: './code/views'
