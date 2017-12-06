@@ -1,4 +1,4 @@
-import connectReload from 'jsy-rollup-bundler/dist/live-loader.mjs'
+import connectReload from 'jsy-rollup-bundler/dist/react-live-loader.mjs'
 if 'production' !== process.env.NODE_ENV :: connectReload()
 
 import React from 'react'

@@ -25,9 +25,7 @@ export default @{}
 
     development: @{}
       production: false, sourcemap: true
-      progress: @{} clearLine: false
 
     production: @{}
       production: true, sourcemap: true
-      progress: @{} clearLine: false
 

@@ -15,18 +15,13 @@ const config_files = @[]
   './rollup.svr.jsy'
 
 const rpi = @{}
-  babel: require @ 'rollup-plugin-babel'
-
   resolve: require @ 'rollup-plugin-node-resolve'
   commonjs: require @ 'rollup-plugin-commonjs'
 
   virtual_alias: require @ 'rollup-plugin-virtual-alias'
   replace: require @ 'rollup-plugin-replace'
 
-  viz: require @ 'rollup-plugin-visualizer'
   uglify: require @ 'rollup-plugin-uglify'
-  progress: require @ 'rollup-plugin-progress'
-
   hash_n_gzip: require @ 'rollup-plugin-hash-n-gzip'
 
 
@@ -152,18 +147,11 @@ function bundle_plugins(opt={}, source, plugins) ::
 
     ... plugins
 
-    opt.viz &&
-      rpi.viz @: filename: `${opt.outdir}/${opt.source.name}.stats.html`
-
     opt.uglify &&
       rpi.uglify @ opt.uglify, minify
 
     opt.gzip &&
       rpi.hash_n_gzip()
-
-    opt.progress &&
-      rpi.progress @:
-        clearLine: opt.progress.clearLine
 
   return bundle @: opt, source
     globalModules: opt.globalModules

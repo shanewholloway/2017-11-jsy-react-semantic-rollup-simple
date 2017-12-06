@@ -11,11 +11,6 @@ async function main() ::
     console.log @ `READY!`
     console.log @ `  ${url}`
     console.log @
-    console.log @ `  stats:`
-    console.log @ `   - ${url}/vendor.stats.html`
-    console.log @ `   - ${url}/main.stats.html`
-    console.log @ `   - ${url}/simple.stats.html`
-    console.log @
 
 
 if module === require.main ::
