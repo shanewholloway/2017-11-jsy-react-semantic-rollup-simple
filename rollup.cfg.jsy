@@ -117,12 +117,6 @@ function bundle_vendor(opt, source) ::
   return bundle_plugins @ opt, source, @[]
 
 function bundle_jsy(opt, source) ::
-  opt = Object.create @ opt
-  opt.input_options = @{}
-    treeshake: @{}
-      pureExternalModules: true
-      propertyReadSideEffects: false
-
   return bundle_plugins @ opt, source, @[]
     jsy_plugin @:
       plugins: @[] 'external-helpers'
