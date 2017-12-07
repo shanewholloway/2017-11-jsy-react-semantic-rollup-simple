@@ -20,6 +20,7 @@ const rpi = @{}
 
   virtual_alias: require @ 'rollup-plugin-virtual-alias'
   replace: require @ 'rollup-plugin-replace'
+  stripcode: require @ 'rollup-plugin-strip-code'
 
   uglify: require @ 'rollup-plugin-uglify'
   hash_n_gzip: require @ 'rollup-plugin-hash-n-gzip'
@@ -116,6 +117,12 @@ function bundle_vendor(opt, source) ::
   return bundle_plugins @ opt, source, @[]
 
 function bundle_jsy(opt, source) ::
+  opt = Object.create @ opt
+  opt.input_options = @{}
+    treeshake: @{}
+      pureExternalModules: true
+      propertyReadSideEffects: false
+
   return bundle_plugins @ opt, source, @[]
     jsy_plugin @:
       plugins: @[] 'external-helpers'
@@ -135,6 +142,10 @@ function bundle_plugins(opt={}, source, plugins) ::
     rpi.replace @:
       'process.env.NODE_ENV': JSON.stringify @
         opt.production ? 'production' : 'development'
+
+    rpi.stripcode @:
+      start_comment: `BEGIN ${opt.production ? 'DEV' : 'PROD'} ONLY`
+      end_comment: `END ${opt.production ? 'DEV' : 'PROD'} ONLY`
 
     rpi.resolve @:
       module: true, jsnext: true, browser: false, main: false

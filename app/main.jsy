@@ -1,5 +1,7 @@
+/* BEGIN DEV ONLY */
 import connectReload from 'jsy-rollup-bundler/dist/react-live-loader.mjs'
-if 'production' !== process.env.NODE_ENV :: connectReload()
+connectReload()
+/* END DEV ONLY */
 
 import React from 'react'
 import ReactDOM from 'react-dom'

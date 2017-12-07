@@ -35,6 +35,7 @@
     "rollup-plugin-hash-n-gzip": "^1.0.1",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-replace": "^2.0.0",
+    "rollup-plugin-strip-code": "^0.2.3",
     "rollup-plugin-uglify": "^2.0.1",
     "rollup-plugin-virtual-alias": "^1.0.1",
     "semantic-ui-css-latolatin": "2.2.13-f2",
