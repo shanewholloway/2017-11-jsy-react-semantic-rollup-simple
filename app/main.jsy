@@ -6,12 +6,15 @@ connectReload()
 import React from 'react'
 import ReactDOM from 'react-dom'
 import {FelaStyle, felaComponent} from './cfg/style'
-import Progress from 'semantic-ui-react/dist/es/modules/Progress'
+import SUI_Progress from 'semantic-ui-react/dist/es/modules/Progress'
 import theme from './cfg/theme'
 
 const Heading = felaComponent @ 'h1', props => @:
   color: props.theme.color
   fontSize: '20px'
+
+const Progress = felaComponent @ SUI_Progress, props => @:
+  backgroundColor: 'orange'
 
 function DummyComponent() ::
   return @

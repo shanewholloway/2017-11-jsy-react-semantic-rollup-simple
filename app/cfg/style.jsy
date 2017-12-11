@@ -1,6 +1,6 @@
 import React from 'react'
 import { createRenderer } from 'fela'
-import { createComponentWithProxy, Provider, ThemeProvider } from 'react-fela'
+import { connect, createComponentWithProxy, Provider, ThemeProvider } from 'react-fela'
 
 import fpi_extend from 'fela-plugin-extend'
 import fpi_prefixer from 'fela-plugin-prefixer'
@@ -36,7 +36,11 @@ export function FelaStyle({theme, children}) ::
       </ThemeProvider>
     </Provider>
 
-export function felaComponent(type, rule, passThroughProps) ::
-  if 'function' === typeof type ::
-    const fn = type; type = rule; rule = fn
-  return createComponentWithProxy @ rule, type, passThroughProps
+export function felaComponent(Type, rule, passThroughProps) ::
+  if 'string' === typeof Type ::
+    return createComponentWithProxy @ rule, Type, passThroughProps
+
+  const fc = props => @ <Type {... props} />
+  return createComponentWithProxy @ rule, fc, passThroughProps
+
+export const felaConnect = connect
